@@ -148,34 +148,80 @@
       if (nx) { state.unlocked = Math.max(state.unlocked, ch.id + 1); state.chapter = ch.id + 1; state.step = 0; }
       render();
     };
-    wireHelper(s);
+    wireHelper(s, ch);
   }
 
   function helperHTML() {
     return `<details class="helper">
-      <summary>🛟 Check my code</summary>
+      <summary>🛟 Helper — want a check, or stuck?</summary>
       <div class="body">
-        <p class="hint">Paste your code so far — I'll check this step's line is in there.</p>
-        <textarea id="paste" placeholder="Paste your main.py here…"></textarea>
-        <div class="nav" style="margin-top:12px"><span></span><button class="btn primary" id="check">Check it</button></div>
+        <p class="hint">Paste your code (or the red error you got), then choose:</p>
+        <textarea id="paste" placeholder="Paste your main.py — or an error message…"></textarea>
+        <div class="hbtns">
+          <button class="btn" id="check">Check my code</button>
+          <button class="btn primary" id="help">Something's not right</button>
+        </div>
         <div class="result" id="result"></div>
-        <p class="note">A quick contains-check, fully in your browser. The full parse + plain-language helper arrive with the chat.</p>
+        <p class="note">Your code is checked instantly in your browser. When the live helper is on, it adds a plain-language hand.</p>
       </div>
     </details>`;
   }
 
-  function wireHelper(s) {
-    const btn = document.getElementById("check"); if (!btn) return;
-    btn.onclick = () => {
-      const pasted = document.getElementById("paste").value || "";
-      const result = document.getElementById("result");
-      const norm = (t) => t.replace(/\s+/g, " ").trim();
+  function wireHelper(s, ch) {
+    const checkBtn = document.getElementById("check");
+    const helpBtn = document.getElementById("help");
+    const result = document.getElementById("result");
+    if (!checkBtn) return;
+
+    const norm = (t) => t.replace(/\s+/g, " ").trim();
+    const br = (t) => esc(t).replace(/\n/g, "<br>");
+    const ctx = { chapter: `${ch.id} — ${ch.title}`, stepTitle: s.title, code: s.code, see: s.see, recovery: s.recovery || [] };
+    const set = (cls, html) => { result.className = "result " + cls; result.innerHTML = html; };
+
+    function deterministic(pasted) {
       const lines = s.code.split("\n").map(norm).filter(Boolean);
       const hay = norm(pasted);
       const missing = lines.filter((ln) => !hay.includes(ln));
-      if (!pasted.trim()) { result.className = "result no"; result.textContent = "Paste your code first and I'll take a look."; }
-      else if (!missing.length) { result.className = "result ok"; result.textContent = "✓ This step's code is in there. Run it and check the result above."; }
-      else { result.className = "result no"; result.innerHTML = "I don't see this step's line yet. It should include:<br><code>" + esc(missing[0]) + "</code>"; }
+      return { ok: missing.length === 0, missing };
+    }
+
+    async function ask(payload) {
+      const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      if (!r.ok) throw new Error("http " + r.status);
+      const d = await r.json();
+      if (!d.text) throw new Error(d.error || "no text");
+      return d.text;
+    }
+
+    checkBtn.onclick = async () => {
+      const pasted = document.getElementById("paste").value || "";
+      if (!pasted.trim()) { set("no", "Paste your code first and I'll check it."); return; }
+      const f = deterministic(pasted);
+      const verdict = f.ok
+        ? "✓ This step's code is in there."
+        : "I don't see this step's line yet — it should include:<br><code>" + esc(f.missing[0]) + "</code>";
+      set(f.ok ? "ok" : "no", verdict + `<div class="voice" id="voice"><span class="spin"></span> checking with the helper…</div>`);
+      const findings = f.ok ? "All of this step's lines are present." : ("Missing line(s): " + f.missing.join(" | "));
+      try {
+        const text = await ask({ mode: "check", ctx, pasted, findings });
+        const v = document.getElementById("voice"); if (v) v.innerHTML = br(text);
+      } catch {
+        const v = document.getElementById("voice"); if (v) v.remove();
+      }
+    };
+
+    helpBtn.onclick = async () => {
+      const pasted = document.getElementById("paste").value || "";
+      set("", `<span class="spin"></span> looking at it…`);
+      try {
+        const text = await ask({ mode: "help", ctx, pasted });
+        set("ok", br(text));
+      } catch {
+        const fixes = (s.recovery && s.recovery.length)
+          ? "<ul>" + s.recovery.map((r) => "<li>" + esc(r) + "</li>").join("") + "</ul>"
+          : "Re-check this step's code against the snippet above.";
+        set("no", "<b>The live helper is offline</b> — but here are the usual fixes for this step:" + fixes);
+      }
     };
   }
 
