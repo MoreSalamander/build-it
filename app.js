@@ -99,6 +99,7 @@
             <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="fname">main.py</span></div>
             <pre class="language-python"><code class="language-python">${esc(s.code)}</code></pre>
           </div>
+          ${s.full ? `<details class="fullcode"><summary>📄 Your whole file so far</summary><div class="codewrap"><div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="fname">main.py</span></div><pre class="language-python"><code class="language-python">${esc(s.full)}</code></pre></div></details>` : ""}
 
           <div class="label">What it does</div>
           <p>${esc(s.does)}</p>

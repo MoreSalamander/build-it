@@ -200,3 +200,11 @@ details.recovery code { font: 12.5px "JetBrains Mono", monospace; background: rg
 
 .coming { text-align: center; padding: 60px 24px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--soft); }
 .coming h3 { font-family: "Space Grotesk", sans-serif; color: var(--ink); margin: 0 0 6px; }
+
+details.fullcode { margin-top: 12px; }
+details.fullcode > summary { cursor: pointer; color: var(--soft); font-size: 13px; font-weight: 600; list-style: none; padding: 6px 2px; }
+details.fullcode > summary::-webkit-details-marker { display: none; }
+details.fullcode > summary::before { content: "▸ "; color: var(--faint); }
+details.fullcode[open] > summary::before { content: "▾ "; }
+details.fullcode .codewrap { margin-top: 8px; }
+details.fullcode .codewrap pre { max-height: 460px; overflow: auto; }
