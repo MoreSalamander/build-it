@@ -33,7 +33,7 @@
     const ready = SOT.chapters.filter(playable).length;
     app.innerHTML = `
       <section class="hero">
-        <div class="eyebrow">A MoreSalamander Production</div>
+        <div class="eyebrow">MoreSalamander StudioLabs Productions</div>
         <h1>Build something<br/>you'd show a friend.</h1>
         <p>Real projects, one calm page at a time. You always know exactly what to type, what you'll see, and what to do if it's not right.</p>
       </section>
