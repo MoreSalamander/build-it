@@ -25,6 +25,7 @@
   function render() {
     save(state); setProgress();
     if (state.view === "menu") { topRight.innerHTML = "Learn by building"; return renderMenu(); }
+    if (state.view === "setup") { topRight.innerHTML = "Getting set up"; return renderSetup(); }
     topRight.innerHTML = `<b>${esc(SOT.title)}</b> · Easy`;
     renderReader();
   }
@@ -44,8 +45,10 @@
           <p class="desc">${esc(SOT.pitch)}</p>
           <div class="meta"><span>${totalCh} chapters</span><span>·</span><span>${ready} ready</span><span class="go">Start building →</span></div>
         </div>
-      </div>`;
+      </div>
+      <p class="setup-cta">First time coding? <a id="setupLink">Set up your computer first →</a></p>`;
     document.getElementById("proj").onclick = () => { state.view = "reader"; render(); };
+    document.getElementById("setupLink").onclick = () => startSetup();
   }
 
   function renderReader() {
@@ -223,6 +226,112 @@
         set("no", "<b>The live helper is offline</b> — but here are the usual fixes for this step:" + fixes);
       }
     };
+  }
+
+  // ---------- setup interview: deterministic readiness machine, chat UI ----------
+  const sBot = (t) => state.setup.log.push({ who: "bot", text: t });
+  const sYou = (t) => state.setup.log.push({ who: "you", text: t });
+  const PY = {
+    mac: { where: "your Mac", term: "Press ⌘ + Space, type Terminal, and press Enter.", cmd: "python3 --version" },
+    win: { where: "your PC", term: "Click Start, type PowerShell, and press Enter.", cmd: "python --version" },
+  };
+  const linkify = (s) => s.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+
+  function startSetup() {
+    state.view = "setup";
+    state.setup = { os: null, stage: "os", log: [] };
+    sBot("Before we build anything, let's get your computer ready — about two minutes, and I'll walk you through every part. First: are you on a Mac or a Windows PC?");
+    render();
+  }
+
+  function renderSetup() {
+    const st = state.setup || { log: [], stage: "os" };
+    const fmtBot = (t) => linkify(esc(t)).replace(/\n/g, "<br>");
+    const fmtYou = (t) => esc(t).replace(/\n/g, "<br>");
+    const bubbles = st.log.map((m) => `<div class="bubble ${m.who}">${m.who === "bot" ? fmtBot(m.text) : fmtYou(m.text)}</div>`).join("");
+    app.innerHTML = `<div class="setup">
+      <div class="crumbs"><a id="home">← All projects</a></div>
+      <div class="chat">${bubbles}</div>
+      <div class="setup-controls" id="ctrls"></div>
+    </div>`;
+    document.getElementById("home").onclick = () => { state.view = "menu"; render(); };
+    const c = document.getElementById("ctrls");
+    const btn = (id, label, primary) => `<button class="btn ${primary ? "primary" : ""}" id="${id}">${label}</button>`;
+    const on = (id, fn) => { const e = document.getElementById(id); if (e) e.onclick = fn; };
+
+    if (st.stage === "os") {
+      c.innerHTML = btn("os-mac", "🍎 Mac", true) + btn("os-win", "🪟 Windows");
+      on("os-mac", () => chooseOS("mac")); on("os-win", () => chooseOS("win"));
+    } else if (st.stage === "python") {
+      c.innerHTML = `<textarea id="pyout" placeholder="Paste what the command printed…"></textarea><div class="hbtns">${btn("py-go", "Check it", true)}</div>`;
+      on("py-go", submitPython);
+    } else if (st.stage === "python_unclear") {
+      c.innerHTML = btn("py-have", "It showed a version (Python 3.x)", true) + btn("py-none", "It showed an error");
+      on("py-have", () => pythonResult(true)); on("py-none", () => pythonResult(false));
+    } else if (st.stage === "python_install") {
+      c.innerHTML = btn("py-again", "I've installed Python — check again", true);
+      on("py-again", recheckPython);
+    } else if (st.stage === "editor") {
+      c.innerHTML = btn("ed-yes", "I have VS Code", true) + btn("ed-other", "Another editor") + btn("ed-no", "I don't have one");
+      on("ed-yes", () => editorResult("vscode")); on("ed-other", () => editorResult("other")); on("ed-no", () => editorResult("none"));
+    } else if (st.stage === "editor_install") {
+      c.innerHTML = btn("ed-done", "I've installed VS Code", true);
+      on("ed-done", () => { sYou("Installed VS Code"); goReady(); render(); });
+    } else if (st.stage === "ready") {
+      c.innerHTML = btn("build", "Start building 🎆", true);
+      on("build", () => { state.view = "reader"; state.chapter = 1; state.step = 0; render(); });
+    }
+    const chat = document.querySelector(".chat"); if (chat) chat.scrollTop = chat.scrollHeight;
+  }
+
+  function chooseOS(os) {
+    state.setup.os = os; sYou(os === "mac" ? "Mac" : "Windows");
+    const p = PY[os];
+    sBot(`Great. Let's see if Python is already on ${p.where}.\n1) ${p.term}\n2) In that window, type this and press Enter:   ${p.cmd}\n3) Paste whatever it says back to me below.`);
+    state.setup.stage = "python"; render();
+  }
+  function submitPython() {
+    const out = (document.getElementById("pyout").value || "").trim();
+    if (!out) return;
+    sYou(out);
+    if (/python\s*3\./i.test(out)) return pythonResult(true);
+    if (/command not found|not recognized|no such|not found/i.test(out)) return pythonResult(false);
+    sBot('I couldn\'t read that for sure. Did it show a version like "Python 3.something", or an error?');
+    state.setup.stage = "python_unclear"; render();
+  }
+  function pythonResult(ok) {
+    if (ok) {
+      sBot("Perfect — Python's installed. ✓");
+      sBot("Last thing: you need somewhere to write code, called an editor. Do you already have one (like VS Code)?");
+      state.setup.stage = "editor";
+    } else {
+      const win = state.setup.os === "win";
+      sBot("No problem — it's just not installed yet. Let's fix that:\n1) Go to https://python.org/downloads\n2) Click the big Download Python button." +
+        (win ? '\n3) Open the file — and IMPORTANT: tick "Add Python to PATH" at the bottom before you click Install.' : "\n3) Open the file and click through the installer (the defaults are fine).") +
+        "\nThen come back and we'll check again.");
+      state.setup.stage = "python_install";
+    }
+    render();
+  }
+  function recheckPython() {
+    sYou("I installed Python");
+    sBot(`Great — let's check again. Type this, press Enter, and paste the result:   ${PY[state.setup.os].cmd}`);
+    state.setup.stage = "python"; render();
+  }
+  function editorResult(kind) {
+    if (kind === "none") {
+      sYou("I don't have one");
+      sBot("VS Code is free and the most popular — let's grab it:\n1) Go to https://code.visualstudio.com\n2) Click the big Download button.\n3) Open the file and follow the installer.\nDone?");
+      state.setup.stage = "editor_install";
+    } else {
+      sYou(kind === "vscode" ? "I have VS Code" : "I have another editor");
+      goReady();
+    }
+    render();
+  }
+  function goReady() {
+    sBot("That's it — your computer's ready: Python ✓ and an editor ✓. Everything from here happens in those two. Let's build your firework simulator. 🎆");
+    state.setup.stage = "ready";
   }
 
   function wireTOC() {
