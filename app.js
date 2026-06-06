@@ -78,6 +78,7 @@
       const idx = Math.min(state.step, total - 1);
       const s = ch.steps[idx];
       const last = idx === total - 1;
+      const full = (window.BUILDIT_FULLS && BUILDIT_FULLS[ch.id - 1] && BUILDIT_FULLS[ch.id - 1][idx]) || s.full;
       main = `<div>
         <div class="crumbs"><a id="home">← All projects</a></div>
         <div class="chapter-head">
@@ -99,7 +100,7 @@
             <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="fname">main.py</span></div>
             <pre class="language-python"><code class="language-python">${esc(s.code)}</code></pre>
           </div>
-          ${s.full ? `<details class="fullcode"><summary>📄 Your whole file so far</summary><div class="codewrap"><div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="fname">main.py</span></div><pre class="language-python"><code class="language-python">${esc(s.full)}</code></pre></div></details>` : ""}
+          ${full ? `<details class="fullcode"><summary>📄 Your whole file so far</summary><div class="codewrap"><div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="fname">main.py</span></div><pre class="language-python"><code class="language-python">${esc(full)}</code></pre></div></details>` : ""}
 
           <div class="label">What it does</div>
           <p>${esc(s.does)}</p>
