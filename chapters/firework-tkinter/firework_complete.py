@@ -29,10 +29,10 @@ shapes = ["rocket", "peony", "willow", "palm", "ring", "cracker"]
 current = {"shape": "rocket", "auto": False, "timer": 0}
 
 def launch(event):
-    fireworks.append({"x": event.x, "y": 800, "vx": random.uniform(-1, 1), "vy": -15, "trail": [], "shape": current["shape"]})
+    fireworks.append({"x": event.x, "y": 800, "vx": random.uniform(-1, 1), "vy": random.uniform(-20, -12), "trail": [], "shape": current["shape"]})
 
 def random_firework(event=None):
-    fireworks.append({"x": random.randint(100, 1100), "y": 800, "vx": random.uniform(-1, 1), "vy": -15, "trail": [], "shape": random.choice(shapes)})
+    fireworks.append({"x": random.randint(100, 1100), "y": 800, "vx": random.uniform(-1, 1), "vy": random.uniform(-20, -12), "trail": [], "shape": random.choice(shapes)})
 
 def set_shape(name):
     current["shape"] = name
@@ -46,27 +46,26 @@ def clear_all(event=None):
     canvas.delete("firework")
 
 def burst(x, y, color, shape):
-    count = 60
-    if shape == "peony":
-        count = 100
-    if shape == "cracker":
-        count = 90
+    count = 80
     for i in range(count):
         angle = random.uniform(0, 6.28)
-        speed = random.uniform(2, 6)
-        life = random.randint(60, 110)
-        if shape == "ring":
-            angle = (i / count) * 6.28
-            speed = 5
+        speed = random.uniform(2.5, 5)
+        life = random.randint(70, 110)
+        if shape == "peony":
+            speed = random.uniform(6, 10)
+            life = random.randint(100, 140)
         elif shape == "willow":
-            speed = random.uniform(1.5, 3.5)
-            life = random.randint(110, 150)
+            speed = random.uniform(2, 3.5)
+            life = random.randint(150, 210)
         elif shape == "palm":
-            angle = (i % 5) / 5 * 6.28 + random.uniform(-0.2, 0.2)
-            speed = random.uniform(5, 8)
+            angle = -1.57 + random.uniform(-0.5, 0.5)
+            speed = random.uniform(8, 12)
+        elif shape == "ring":
+            angle = (i / count) * 6.28
+            speed = 8
         elif shape == "cracker":
-            speed = random.uniform(1, 4)
-            life = random.randint(25, 50)
+            speed = random.uniform(1, 3)
+            life = random.randint(18, 38)
         sparks.append({"x": x, "y": y, "vx": math.cos(angle) * speed, "vy": math.sin(angle) * speed, "color": color, "life": life})
 
 canvas.bind("<Button-1>", launch)

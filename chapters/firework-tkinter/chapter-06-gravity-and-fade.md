@@ -144,7 +144,7 @@ colors = ["#ff3232", "#3264ff", "#32ff64", "#ffd700", "#c832ff", "#ffffff", "#ff
 sparks = []
 
 def launch(event):
-    fireworks.append({"x": event.x, "y": 800, "vx": random.uniform(-1, 1), "vy": -15, "trail": []})
+    fireworks.append({"x": event.x, "y": 800, "vx": random.uniform(-1, 1), "vy": random.uniform(-20, -12), "trail": []})
 
 def burst(x, y, color):
     for i in range(60):

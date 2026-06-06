@@ -24,7 +24,7 @@ def launch(event):
         "x": event.x,
         "y": 800,
         "vx": random.uniform(-1, 1),
-        "vy": -15,
+        "vy": random.uniform(-20, -12),
         "trail": []
     })
 
@@ -34,7 +34,7 @@ canvas.bind("<Button-1>", launch)
 **What it does:** `fireworks` is a list, like `stars`. `launch` is a function that
 runs whenever you click — `event` tells it *where* you clicked. It adds a new rocket
 note-card: starting at your click's `x` but down at the ground (`y` = 800), drifting
-slightly sideways (`vx`), shooting **up** (`vy` = -15 — negative is up, because `y`
+slightly sideways (`vx`), shooting **up** (`vy` is a random upward speed — negative is up, because `y`
 grows *downward* on a screen), and an empty `trail` to fill in later. `canvas.bind`
 connects left-clicks to `launch`.
 
@@ -101,7 +101,7 @@ line)*
 
 **What it does:** every frame, gravity tugs each rocket by adding `0.3` to its
 downward speed (`vy`). Then we move it: `x` by its sideways drift, `y` by its vertical
-speed. Since `vy` starts at -15 (up) and gravity keeps adding, the rocket rises fast,
+speed. Since `vy` starts negative (up) and gravity keeps adding, the rocket rises fast,
 slows, stops, and arcs back down — just like the real thing.
 
 **Why it matters:** this is **physics**, and it's the very same three lines (gravity,
@@ -115,7 +115,7 @@ as it climbs, and arcs back down. 🎆
 
 **If it's not right:**
 - *The dot doesn't move* → the move loop must be inside `tick`.
-- *It flies off instantly* → check `vy` starts at -15 and gravity adds a small `0.3`.
+- *It flies off instantly* → check `vy` starts negative and gravity adds a small `0.3`.
 
 ---
 
@@ -198,7 +198,7 @@ def launch(event):
         "x": event.x,
         "y": 800,
         "vx": random.uniform(-1, 1),
-        "vy": -15,
+        "vy": random.uniform(-20, -12),
         "trail": []
     })
 

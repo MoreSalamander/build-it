@@ -34,7 +34,7 @@ window.bind("6", lambda e: set_shape("cracker"))
 **The code — part B** *(in `launch`, add the chosen shape to the rocket)*
 ```python
 def launch(event):
-    fireworks.append({"x": event.x, "y": 800, "vx": random.uniform(-1, 1), "vy": -15, "trail": [], "shape": current["shape"]})
+    fireworks.append({"x": event.x, "y": 800, "vx": random.uniform(-1, 1), "vy": random.uniform(-20, -12), "trail": [], "shape": current["shape"]})
 ```
 
 **The code — part C** *(change `burst` to accept a `shape`, and the call in `tick` to
@@ -73,27 +73,26 @@ through. Next step makes each one its own.
 **The code** *(replace the inside of your `burst` function with this)*
 ```python
 def burst(x, y, color, shape):
-    count = 60
-    if shape == "peony":
-        count = 100
-    if shape == "cracker":
-        count = 90
+    count = 80
     for i in range(count):
         angle = random.uniform(0, 6.28)
-        speed = random.uniform(2, 6)
-        life = random.randint(60, 110)
-        if shape == "ring":
-            angle = (i / count) * 6.28
-            speed = 5
+        speed = random.uniform(2.5, 5)
+        life = random.randint(70, 110)
+        if shape == "peony":
+            speed = random.uniform(6, 10)
+            life = random.randint(100, 140)
         elif shape == "willow":
-            speed = random.uniform(1.5, 3.5)
-            life = random.randint(110, 150)
+            speed = random.uniform(2, 3.5)
+            life = random.randint(150, 210)
         elif shape == "palm":
-            angle = (i % 5) / 5 * 6.28 + random.uniform(-0.2, 0.2)
-            speed = random.uniform(5, 8)
+            angle = -1.57 + random.uniform(-0.5, 0.5)
+            speed = random.uniform(8, 12)
+        elif shape == "ring":
+            angle = (i / count) * 6.28
+            speed = 8
         elif shape == "cracker":
-            speed = random.uniform(1, 4)
-            life = random.randint(25, 50)
+            speed = random.uniform(1, 3)
+            life = random.randint(18, 38)
         sparks.append({"x": x, "y": y, "vx": math.cos(angle) * speed, "vy": math.sin(angle) * speed, "color": color, "life": life})
 ```
 
@@ -101,7 +100,7 @@ def burst(x, y, color, shape):
 - **rocket** — a plain round sphere (the default).
 - **peony** — a *bigger, denser* sphere (more sparks).
 - **willow** — slow sparks that live long, so they hang and droop.
-- **palm** — sparks sent in five thick branches.
+- **palm** — a narrow fountain that shoots straight up.
 - **ring** — sparks spaced evenly at one speed, making a clean expanding circle.
 - **cracker** — lots of tiny, fast, short-lived sparks — a quick crackle.
 
@@ -113,7 +112,7 @@ identical functions.
 different** explosion. **That's Beat 7 — six fireworks.**
 
 **Checkpoint:** ✅ all six keys produce visibly distinct bursts (ring looks like a
-ring, palm has branches, etc.).
+ring, palm shoots up, etc.).
 
 **If it's not right:**
 - *Some shapes look identical* → check the `if`/`elif` names match the key bindings
