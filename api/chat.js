@@ -45,7 +45,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({
-        model: "claude-3-5-haiku-latest",
+        model: "claude-haiku-4-5",
         max_tokens: 400,
         system: SYSTEM,
         messages: [{ role: "user", content: L.join("\n\n") }],
