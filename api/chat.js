@@ -17,7 +17,7 @@ const SYSTEM =
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  const key = process.env.ANTHROPIC_API_KEY;
+  const key = process.env.ANTHROPIC_API_KEY || process.env.Anthropic_api_key;
   if (!key) return res.status(503).json({ error: "helper-not-configured" });
 
   try {
